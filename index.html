@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PatientCare AI - Intelligent Clinical Case-Taking System (SIH 2026)</title>
+  <meta name="description" content="AI-Assisted Intelligent Patient Case-Taking System with accessible pointer questions, multilingual voice narration for illiterate patients, and doctor verification dashboard.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ====================================================================
+       TOP APP HEADER
+       ==================================================================== -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-section">
+        <div class="brand-logo-icon">🩺</div>
+        <div class="brand-text">
+          <h1>PatientCare AI</h1>
+          <p id="headerBrandTagline" class="brand-tagline">Problem Statement #47 &bull; Smart India Hackathon 2026</p>
+        </div>
+        <span class="sih-badge">
+          <span>🇮🇳</span> SIH 2026 Internal
+        </span>
+      </div>
+
+      <!-- Right Header Actions -->
+      <div style="display:flex; align-items:center; gap:0.75rem;">
+        <!-- Global Audio Accessibility Indicator -->
+        <button id="globalAudioToggleBtn" class="audio-assist-btn" onclick="toggleAudioNarration()" title="Toggle voice narration for illiterate patients">
+          <span id="audioIcon">🔊</span>
+          <span id="audioText">Voice Assistance: <strong>ON</strong></span>
+        </button>
+
+        <!-- Track Case Button for Patients -->
+        <button id="trackStatusTriggerBtn" class="btn btn-outline" style="padding:0.45rem 0.85rem; font-size:0.8rem; font-weight:700; border-color:var(--teal-border); color:var(--teal);" onclick="openPatientStatusModal()">
+          🔍 <span id="trackStatusBtnText">Track Case / टोकन स्थिति</span>
+        </button>
+
+        <!-- Doctor Login / Switcher Button -->
+        <button id="docLoginTriggerBtn" class="btn btn-outline" style="padding:0.45rem 0.9rem; font-size:0.8rem; font-weight:700; border-color:var(--primary-border); color:var(--primary);" onclick="openDoctorLoginModal()">
+          👨‍⚕️ Doctor Login / Portal <span id="headerPendingBadge" class="mini-badge">2</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-content">
+
+    <!-- ====================================================================
+         STEP 1: PATIENT REGISTRATION & LANGUAGE CHOICE (OPENING SCREEN)
+         ==================================================================== -->
+    <section id="registrationView" class="view-section active">
+      <div class="reg-card-wrap">
+        
+        <div class="card reg-card">
+          <div class="card-header" style="background: linear-gradient(135deg, #1e3a8a 0%, #0d9488 100%); color:white;">
+            <div>
+              <h2 id="regCardTitle" style="font-size:1.25rem; font-weight:700; margin-bottom:0.25rem;">📋 Patient Registration & Language Selection</h2>
+              <p id="regCardSub" style="font-size:0.825rem; opacity:0.9;">मरीज पंजीकरण एवं भाषा चयन &bull; Please fill your basic details to start</p>
+            </div>
+            <button class="speaker-btn white" onclick="speakCurrentText('Welcome to PatientCare AI. Please choose your language and enter your name and age to begin.')" title="Listen / सुनें">
+              🔊
+            </button>
+          </div>
+
+          <div class="card-body" style="padding:1.75rem;">
+            
+            <!-- Language Selector with Native Scripts -->
+            <div class="form-group" style="margin-bottom:1.5rem;">
+              <label id="regLangLabel" style="font-size:0.9rem; font-weight:700; color:var(--primary); display:flex; align-items:center; gap:0.4rem;"><span>🌐</span> Choose Your Preferred Language / अपनी भाषा चुनें:</label>
+              <div class="lang-grid" id="langGrid">
+                <button type="button" class="lang-chip active" data-lang="en" onclick="selectLanguage('en', this)">
+                  <span class="lang-title">English</span>
+                  <span class="lang-sub">Default</span>
+                </button>
+                <button type="button" class="lang-chip" data-lang="hi" onclick="selectLanguage('hi', this)">
+                  <span class="lang-title">हिंदी</span>
+                  <span class="lang-sub">Hindi</span>
+                </button>
+                <button type="button" class="lang-chip" data-lang="ta" onclick="selectLanguage('ta', this)">
+                  <span class="lang-title">தமிழ்</span>
+                  <span class="lang-sub">Tamil</span>
+                </button>
+                <button type="button" class="lang-chip" data-lang="te" onclick="selectLanguage('te', this)">
+                  <span class="lang-title">తెలుగు</span>
+                  <span class="lang-sub">Telugu</span>
+                </button>
+                <button type="button" class="lang-chip" data-lang="bn" onclick="selectLanguage('bn', this)">
+                  <span class="lang-title">বাংলা</span>
+                  <span class="lang-sub">Bengali</span>
+                </button>
+                <button type="button" class="lang-chip" data-lang="mr" onclick="selectLanguage('mr', this)">
+                  <span class="lang-title">मराठी</span>
+                  <span class="lang-sub">Marathi</span>
+                </button>
+                <button type="button" class="lang-chip" data-lang="gu" onclick="selectLanguage('gu', this)">
+                  <span class="lang-title">ગુજરાતી</span>
+                  <span class="lang-sub">Gujarati</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Demographics Inputs -->
+            <form id="registrationForm" onsubmit="handleRegistrationSubmit(event)">
+              <div style="display:grid; grid-template-columns: 2fr 1fr 1.2fr; gap:1rem; margin-bottom:1.25rem;">
+                <div class="form-group">
+                  <label for="regName" id="lblRegName" class="reg-label">
+                    <span>👤</span> Full Name / मरीज का नाम
+                  </label>
+                  <input type="text" id="regName" class="form-control" placeholder="e.g. Ramesh Verma" value="Ramesh Verma" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="regAge" id="lblRegAge" class="reg-label">
+                    <span>🎂</span> Age / उम्र
+                  </label>
+                  <input type="number" id="regAge" class="form-control" placeholder="Age" value="48" min="1" max="120" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="regGender" id="lblRegGender" class="reg-label">
+                    <span>⚧</span> Gender / लिंग
+                  </label>
+                  <select id="regGender" class="form-control">
+                    <option value="Male" selected>Male (पुरुष)</option>
+                    <option value="Female">Female (महिला)</option>
+                    <option value="Other">Other (अन्य)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
+                <div class="form-group">
+                  <label for="regPhone" id="lblRegPhone" class="reg-label">
+                    <span>📱</span> Mobile Number / मोबाइल नंबर
+                  </label>
+                  <input type="tel" id="regPhone" class="form-control" placeholder="+91 98765 43210" value="+91 98765 43210">
+                </div>
+
+                <div class="form-group">
+                  <label for="regPatientType" id="lblRegAssistance" class="reg-label">
+                    <span>♿</span> Patient Assistance Mode
+                  </label>
+                  <select id="regPatientType" class="form-control" onchange="toggleAssistanceMode(this.value)">
+                    <option value="standard">Standard Digital Intake</option>
+                    <option value="assisted" selected>Illiterate / Voice & Visual Icon Mode</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Quick SIH Presentation Scenario Auto-Fillers -->
+              <div class="sih-preset-box">
+                <span id="lblDemoPresets" style="font-size:0.775rem; font-weight:700; color:var(--primary); text-transform:uppercase;">⚡ Quick Demo Presets:</span>
+                <button type="button" id="presetCardiacBtn" class="preset-pill" onclick="fillQuickProfile('cardiac')">
+                  🫀 Cardiac Patient (Rajesh, 52)
+                </button>
+                <button type="button" id="presetGastricBtn" class="preset-pill" onclick="fillQuickProfile('gastric')">
+                  🔥 Gastric Contradiction (Sunita, 38)
+                </button>
+                <button type="button" id="presetPediatricBtn" class="preset-pill" onclick="fillQuickProfile('pediatric')">
+                  👶 Pediatric Case (Aarav, 8)
+                </button>
+              </div>
+
+              <div style="margin-top:1.5rem;">
+                <button type="submit" id="btnStartIntake" class="btn btn-teal btn-block" style="padding:0.85rem; font-size:1rem; font-weight:700;">🚀 Start Clinical Health Intake / स्वास्थ्य जांच शुरू करें ➔</button>
+              </div>
+            </form>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         STEP 2: ACCESSIBLE POINTER-BASED CASE INTAKE (YES/NO & VISUALS)
+         ==================================================================== -->
+    <section id="pointerIntakeView" class="view-section">
+      
+      <!-- Patient Header Bar -->
+      <div class="patient-active-strip">
+        <div style="display:flex; align-items:center; gap:0.75rem;">
+          <div class="active-avatar">👤</div>
+          <div>
+            <h3 id="activePatientName" style="font-size:0.95rem; font-weight:700; margin:0;">Ramesh Verma</h3>
+            <p id="activePatientMeta" style="font-size:0.75rem; color:var(--text-muted); margin:0;">48 Yrs &bull; Male &bull; Hindi</p>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <button id="btnEditReg" class="btn btn-outline" style="padding:0.3rem 0.65rem; font-size:0.75rem;" onclick="returnToRegistration()">
+            ✏️ Edit Registration
+          </button>
+          <span id="intakeProgressBadge" class="progress-pill">Step 1 of 6</span>
+        </div>
+      </div>
+
+      <div class="patient-layout">
+        
+        <!-- Left Column: Interactive Pointer Questioning Card -->
+        <div class="card pointer-flow-card">
+          
+          <div class="card-header" style="background:#fafafa;">
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+              <span style="font-size:1.1rem;">🩺</span>
+              <h2 id="pointerStepHeader" class="card-title" style="font-size:0.95rem;">
+                Question 1: What trouble are you facing?
+              </h2>
+            </div>
+            <!-- Audio Read-Aloud Button for Illiterate Patients -->
+            <button id="readQuestionBtn" class="speaker-btn" onclick="speakActiveQuestion()" title="Listen to question / सवाल सुनें">
+              🔊 Listen / सुनें
+            </button>
+          </div>
+
+          <div class="card-body">
+            
+            <!-- Dynamic Question Container (Filled via app.js) -->
+            <div id="pointerQuestionBox" class="pointer-box">
+              <!-- Content rendered dynamically: Pointer options, Big Yes/No buttons, Icons -->
+            </div>
+
+            <!-- Illiterate Patient Microphone Assistant Bar -->
+            <div class="voice-illiterate-bar">
+              <button type="button" id="pointerMicBtn" class="big-mic-btn" onclick="togglePointerVoice()" title="Tap to speak in your language">
+                <span id="micStatusIcon" style="font-size:1.5rem;">🎙️</span>
+                <span id="micStatusText" style="font-size:0.8rem; font-weight:700;">Tap to Speak / बोलकर बताएं</span>
+              </button>
+              <div id="voiceTranscriptFeedback" class="voice-feedback">
+                Listening will appear here in your selected language...
+              </div>
+            </div>
+
+            <!-- Question Navigation Steps Indicator (11 Comprehensive Steps) -->
+            <div class="stepper-bar">
+              <div class="step-dot active" id="dot1" title="Symptom">1</div>
+              <div class="step-line"></div>
+              <div class="step-dot" id="dot2" title="Intensity & Sensation">2</div>
+              <div class="step-line"></div>
+              <div class="step-dot" id="dot3" title="Duration">3</div>
+              <div class="step-line"></div>
+              <div class="step-dot" id="dot4" title="Clinical Follow-up 1: Associated Signs">4</div>
+              <div class="step-line"></div>
+              <div class="step-dot" id="dot5" title="Clinical Follow-up 2: Triggers & Red Flags">5</div>
+              <div class="step-line"></div>
+              <div class="step-dot" id="dot6" title="Past History: Sugar (Diabetes)">6</div>
+              <div class="step-line"></div>
+              <div class="step-dot" id="dot7" title="Past History: BP & Heart">7</div>
+              <div class="step-line"></div>
+              <div class="step-dot" id="dot8" title="Past Medical Records & Lab Reports (Optional)">8</div>
+              <div class="step-line"></div>
+              <div class="step-dot" id="dot9" title="Daily Medications">9</div>
+              <div class="step-line"></div>
+              <div class="step-dot" id="dot10" title="Drug Allergies">10</div>
+              <div class="step-line"></div>
+              <div class="step-dot" id="dot11" title="Family & Lifestyle">11</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Right Column: Real-time Contradiction Detection & Live Summary -->
+        <div class="intelligence-panel">
+          
+          <!-- Contradictions & Safety Flags -->
+          <div class="intel-box">
+            <div class="intel-box-header">
+              <span style="display:flex; align-items:center; gap:0.4rem; color:#dc2626;">
+                ⚠️ Real-Time Contradiction Detection
+              </span>
+              <span id="pointerFlagCount" class="intel-badge-count" style="background:#fee2e2; color:#dc2626;">
+                0 Flags
+              </span>
+            </div>
+            <div id="pointerFlagsContainer">
+              <div style="font-size:0.8rem; color:var(--text-muted); font-style:italic; padding:0.4rem 0;">
+                AI analyzes each pointer answer to flag contradictory history or unsafe medicine combinations...
+              </div>
+            </div>
+          </div>
+
+          <!-- Structured Clinical Case History Preview -->
+          <div class="intel-box">
+            <div class="intel-box-header">
+              <span style="display:flex; align-items:center; gap:0.4rem; color:var(--teal);">
+                📋 Auto Structured Case History
+              </span>
+              <span id="pointerTriageBadge" class="badge-triage triage-routine">
+                Routine
+              </span>
+            </div>
+
+            <div class="summary-field">
+              <div id="lblLiveCC" class="summary-label">Chief Complaint & Nature</div>
+              <div id="liveCC" class="summary-value">Waiting for symptom selection...</div>
+            </div>
+
+            <div class="summary-field">
+              <div id="lblLiveDuration" class="summary-label">Severity & Duration</div>
+              <div id="liveDuration" class="summary-value">Not answered yet</div>
+            </div>
+
+            <div class="summary-field">
+              <div id="lblLiveSigns" class="summary-label">Clinical Follow-up Signs</div>
+              <div id="liveClinicalFollowup" class="summary-value">None reported</div>
+            </div>
+
+            <div class="summary-field">
+              <div id="lblLivePast" class="summary-label">Past History (Sugar & BP)</div>
+              <div id="liveSugarBP" class="summary-value">Negative / None</div>
+            </div>
+
+            <div class="summary-field">
+              <div id="lblLiveDocs" class="summary-label">Lab Reports / Documents</div>
+              <div id="liveDocuments" class="summary-value" style="color:var(--text-muted);">No documents attached (Optional)</div>
+            </div>
+
+            <div class="summary-field">
+              <div id="lblLiveMeds" class="summary-label">Daily Medicines / Painkillers</div>
+              <div id="liveMeds" class="summary-value">None reported</div>
+            </div>
+
+            <div class="summary-field">
+              <div id="lblLiveAllergy" class="summary-label">Known Drug Allergies</div>
+              <div id="liveAllergy" class="summary-value" style="color:#16a34a; font-weight:600;">None</div>
+            </div>
+
+            <div class="summary-field">
+              <div id="lblLiveLifestyle" class="summary-label">Lifestyle / Family History</div>
+              <div id="liveLifestyle" class="summary-value">Standard / Non-contributory</div>
+            </div>
+
+            <button type="button" id="finalSubmitBtn" class="btn btn-teal btn-block" style="margin-top:1rem; padding:0.75rem;" onclick="finalizeAndSubmitIntake()" disabled>
+              🚀 Submit Case for Doctor Review
+            </button>
+            <p id="lblSubmitNotice" style="font-size:0.7rem; color:var(--text-muted); text-align:center; margin-top:0.35rem;">Case is encrypted & transmitted directly to Doctor's triage queue.</p>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         STEP 3: DOCTOR DASHBOARD & CLINICAL VERIFICATION PORTAL
+         ==================================================================== -->
+    <section id="doctorView" class="view-section">
+      
+      <!-- Top Clinical Summary Bar -->
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem;">
+        <div>
+          <h2 style="font-size:1.25rem; font-weight:700; color:var(--primary); margin:0;">
+            👨‍⚕️ Clinical Triage & Case Verification Portal
+          </h2>
+          <p style="font-size:0.8rem; color:var(--text-muted); margin:0;">
+            Doctor-in-the-loop review, contradiction resolution and digital sign-off
+          </p>
+        </div>
+        <button class="btn btn-outline" onclick="logoutDoctor()" style="border-color:#fca5a5; color:#b91c1c; font-weight:700;">
+          🚪 Exit Doctor Portal / डॉक्टर लॉगआउट
+        </button>
+      </div>
+
+      <!-- Metrics Row -->
+      <div class="doctor-stats-row">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#eff6ff; color:#2563eb;">👥</div>
+          <div>
+            <div id="statTotalCases" class="stat-num">3</div>
+            <div class="stat-label">Total Patient Cases</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#fffbeb; color:#d97706;">⏳</div>
+          <div>
+            <div id="statPendingCases" class="stat-num">2</div>
+            <div class="stat-label">Pending Review</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#fef2f2; color:#dc2626;">⚠️</div>
+          <div>
+            <div id="statFlaggedCases" class="stat-num">2</div>
+            <div class="stat-label">Contradictions Flagged</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#f0fdf4; color:#16a34a;">✅</div>
+          <div>
+            <div id="statVerifiedCases" class="stat-num">1</div>
+            <div class="stat-label">Doctor Verified</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="doctorSearchInput" class="search-input" placeholder="Search by patient name, case ID, or symptom..." oninput="filterCasesTable()">
+        </div>
+
+        <div class="filter-tabs">
+          <button class="filter-tab active" onclick="setDoctorFilter('all', this)">All Cases</button>
+          <button class="filter-tab" onclick="setDoctorFilter('pending', this)">Pending Review</button>
+          <button class="filter-tab" onclick="setDoctorFilter('flagged', this)">Contradictions</button>
+          <button class="filter-tab" onclick="setDoctorFilter('verified', this)">Verified</button>
+        </div>
+      </div>
+
+      <!-- Cases Table -->
+      <div class="table-container">
+        <table class="clinical-table">
+          <thead>
+            <tr>
+              <th>Case ID</th>
+              <th>Patient Details</th>
+              <th>Chief Complaint</th>
+              <th>Triage Level</th>
+              <th>AI Contradiction Flags</th>
+              <th>Doctor Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="casesTableBody">
+            <!-- Populated via app.js -->
+          </tbody>
+        </table>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ====================================================================
+       DOCTOR LOGIN MODAL
+       ==================================================================== -->
+  <div id="doctorLoginModal" class="modal-overlay">
+    <div class="modal-box" style="max-width:440px;">
+      <div class="modal-header">
+        <h3 style="font-size:1.1rem; font-weight:700; color:var(--primary);">
+          👨‍⚕️ Doctor Sign-In
+        </h3>
+        <button class="icon-btn" onclick="closeDoctorLoginModal()">✕</button>
+      </div>
+      <div class="modal-body" style="padding:1.5rem;">
+        <form onsubmit="handleDoctorLogin(event)">
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label style="font-size:0.8rem; font-weight:700; color:var(--text-muted);">Doctor Email / ID</label>
+            <input type="text" id="docEmail" class="form-control" value="dr.sharma@hospital.in" required>
+          </div>
+          <div class="form-group" style="margin-bottom:1.5rem;">
+            <label style="font-size:0.8rem; font-weight:700; color:var(--text-muted);">Password</label>
+            <input type="password" id="docPassword" class="form-control" value="admin123" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" style="padding:0.75rem; font-weight:700;">
+            🔐 Log In to Clinical Portal
+          </button>
+          <div style="text-align:center; margin-top:1rem;">
+            <button type="button" class="preset-pill" style="font-size:0.75rem;" onclick="quickDemoDoctorLogin()">
+              ⚡ 1-Click Fast Demo Login for Judges
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       DOCTOR CASE REVIEW & EDIT MODAL
+       ==================================================================== -->
+  <div id="reviewModal" class="modal-overlay">
+    <div class="modal-box">
+      
+      <div class="modal-header">
+        <div>
+          <h3 id="modalPatientTitle" style="font-size:1.1rem; font-weight:700; color:var(--text-main);">
+            Patient Case Review
+          </h3>
+          <p id="modalPatientMeta" style="font-size:0.775rem; color:var(--text-muted);">
+            Case ID &bull; Demographics
+          </p>
+        </div>
+        <button class="icon-btn" onclick="closeReviewModal()" title="Close">✕</button>
+      </div>
+
+      <div class="modal-body">
+        
+        <div id="verifiedBanner" class="verified-banner" style="display:none;">
+          <span>✓ Doctor Verified by <strong id="verifiedByLabel">Dr. Priya Sharma, M.D.</strong></span>
+          <span id="verifiedAtLabel" style="font-size:0.775rem;"></span>
+        </div>
+
+        <div class="review-split-grid">
+          
+          <!-- Column 1: Patient Answer Log + AI Contradictions -->
+          <div>
+            <h4 style="font-size:0.85rem; font-weight:700; color:var(--primary); margin-bottom:0.6rem; display:flex; align-items:center; gap:0.4rem;">
+              <span>💬</span> Patient Intake Questionnaire Responses
+            </h4>
+            <div id="modalTranscriptBox" class="transcript-review-box">
+              <!-- Filled via app.js -->
+            </div>
+
+            <div style="margin-top:1rem;">
+              <h4 style="font-size:0.85rem; font-weight:700; color:#dc2626; margin-bottom:0.5rem;">
+                ⚠️ AI Detected Contradictions & Gaps
+              </h4>
+              <div id="modalContradictionsBox">
+                <!-- Filled via app.js -->
+              </div>
+            </div>
+
+            <div style="margin-top:1.25rem;">
+              <h4 style="font-size:0.85rem; font-weight:700; color:var(--teal); margin-bottom:0.5rem; display:flex; align-items:center; gap:0.4rem;">
+                <span>📄</span> Attached Patient Lab Reports / Documents
+              </h4>
+              <div id="modalDocumentViewer" style="font-size:0.825rem; color:var(--text-muted);">
+                <!-- Populated via app.js -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 2: Editable Structured Case History -->
+          <div>
+            <h4 style="font-size:0.85rem; font-weight:700; color:var(--teal); margin-bottom:0.6rem; display:flex; align-items:center; gap:0.4rem;">
+              <span>📝</span> Structured Case History (Doctor Can Edit & Confirm)
+            </h4>
+
+            <form id="doctorEditForm" class="doctor-edit-form" onsubmit="event.preventDefault()">
+              <input type="hidden" id="editCaseId">
+
+              <div class="form-group">
+                <label>Chief Complaint (CC)</label>
+                <input type="text" id="editCC" class="form-control">
+              </div>
+
+              <div class="form-group">
+                <label>History of Present Illness (HPI)</label>
+                <textarea id="editHPI" rows="3"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label>Past Medical & Surgical History</label>
+                <input type="text" id="editPastHistory" class="form-control">
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+                <div class="form-group">
+                  <label>Current Medications</label>
+                  <input type="text" id="editMeds" class="form-control">
+                </div>
+                <div class="form-group">
+                  <label>Allergies</label>
+                  <input type="text" id="editAllergies" class="form-control">
+                </div>
+              </div>
+
+              <div class="form-group" style="background:#f8fafc; padding:0.75rem; border-radius:var(--radius-sm); border:1px solid var(--border);">
+                <label style="color:var(--primary); font-weight:700;">Doctor's Provisional Diagnosis</label>
+                <input type="text" id="editDiagnosis" class="form-control" placeholder="e.g. Acute Coronary Syndrome / Peptic Ulcer Disease...">
+                
+                <label style="margin-top:0.5rem; color:var(--primary); font-weight:700;">Prescription & Clinical Orders (Rx)</label>
+                <textarea id="editRx" rows="2" placeholder="e.g. Tab Pantoprazole 40mg OD AC, ECG Stat..."></textarea>
+
+                <label style="margin-top:0.5rem; color:var(--primary); font-weight:700;">Doctor's Clinical Notes</label>
+                <input type="text" id="editDoctorNotes" class="form-control" placeholder="Notes for hospital records...">
+              </div>
+
+            </form>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="printCaseSheet()">
+          🖨️ Print / Download PDF
+        </button>
+        <div style="display:flex; gap:0.6rem;">
+          <button type="button" class="btn btn-outline" onclick="saveCaseEditsOnly()">
+            💾 Save Changes
+          </button>
+          <button type="button" id="verifyBtn" class="btn btn-success" onclick="verifyAndSignOffCase()">
+            ✅ Verify & Sign-Off Record
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Print Sheet -->
+  <div id="printHospitalSheet"></div>
+
+  <script src="app.js"></script>
+
+  <!-- ====================================================================
+       PATIENT CASE & PRESCRIPTION STATUS TRACKER MODAL
+       ==================================================================== -->
+  <div id="patientStatusModal" class="modal-overlay">
+    <div class="modal-box" style="max-width:560px;">
+      <div class="modal-header">
+        <h3 style="font-size:1.1rem; font-weight:700; color:var(--primary); display:flex; align-items:center; gap:0.5rem;">
+          <span>🔍</span> <span id="trackModalHeader">Track Patient Case & Prescription</span>
+        </h3>
+        <button class="icon-btn" onclick="closePatientStatusModal()">✕</button>
+      </div>
+      <div class="modal-body" style="padding:1.5rem;">
+        <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+          <input type="text" id="trackCaseInput" class="form-control" placeholder="Enter Token ID (e.g. CAS-2026-...)" style="font-weight:600;">
+          <button type="button" class="btn btn-teal" style="font-weight:700; padding:0 1.25rem;" onclick="checkCaseStatusByInput()">
+            Search / खोजें
+          </button>
+        </div>
+        <div id="trackStatusResultContainer">
+          <p style="font-size:0.85rem; color:var(--text-muted); text-align:center; padding:1rem 0;">
+            Enter your Patient Token ID above to view live triage status, doctor verification, and official prescription.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

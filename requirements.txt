@@ -1,0 +1,3 @@
+# PatientCare AI - Production Requirements (SIH 2026 - Problem Statement #47)
+# Built using Python Standard Library (http.server, socketserver, sqlite3, json, os, urllib)
+# No external pip dependencies required for runtime.
